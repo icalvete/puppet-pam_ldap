@@ -1,0 +1,24 @@
+<% @ldap_hosts.each do |ldap_host| -%>
+uri ldap://<%= ldap_host -%>/
+<% end -%>
+
+# The LDAP version to use (defaults to 3
+# if supported by client library)
+ldap_version 3
+
+# The distinguished name of the search base.
+base <%= @ldap_suffix %>
+
+binddn <%= @ldap_admin_user %>
+bindpw <%= @ldap_admin_pass %>
+
+scope sub
+pagesize 1000
+referrals off
+
+pam_password <%= @pam_pass_type %>
+
+<% if @active_directory -%>
+pam_filter objectclass=user
+pam_login_attribute sAMAccountName
+<% end -%>

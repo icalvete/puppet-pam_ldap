@@ -1,0 +1,73 @@
+# This is the configuration file for the LDAP nameservice
+# switch library's nslcd daemon. It configures the mapping
+# between NSS names (see /etc/nsswitch.conf) and LDAP
+# information in the directory.
+# See the manual page nslcd.conf(5) for more information.
+
+# Bind/connect timelimit.
+bind_timelimit 180
+
+# Search timelimit.
+timelimit 180
+
+# Idle timelimit. nslcd will close connections if the
+# server has not been contacted for the number of seconds.
+idle_timelimit 240
+
+# The uri pointing to the LDAP server to use for name lookups.
+# Multiple entries may be specified. The address that is used
+# here should be resolvable without using LDAP (obviously).
+#uri ldap://127.0.0.1/
+#uri ldaps://127.0.0.1/
+#uri ldapi://%2fvar%2frun%2fldapi_sock/
+# Note: %2f encodes the '/' used as directory separator
+# uri ldap://127.0.0.1/
+
+<% @ldap_hosts.each do |ldap_host| -%>
+uri ldap://<%= ldap_host -%>/
+<% end -%>
+
+# The LDAP version to use (defaults to 3
+# if supported by client library)
+ldap_version 3
+
+# The distinguished name of the search base.
+base <%= @ldap_suffix %>
+
+# The distinguished name to bind to the server with.
+# Optional: default is to bind anonymously.
+#binddn cn=proxyuser,dc=example,dc=com
+binddn <%= @ldap_admin_user %>
+
+# The credentials to bind with.
+# Optional: default is no credentials.
+# Note that if you set a bindpw you should check the permissions of this file.
+bindpw <%= @ldap_admin_pass %>
+
+# The distinguished name to perform password modifications by root by.
+#rootpwmoddn cn=admin,dc=example,dc=com
+
+# The default search scope.
+#scope sub
+#scope one
+#scope base
+
+scope sub
+pagesize 1000
+referrals off
+
+ssl no
+tls_cacertdir /etc/openldap/cacerts
+
+<% if @active_directory -%>
+# The lines below describe the mapping of Posix attributes to their analogs in AD
+filter passwd (objectClass=user)
+map passwd uid sAMAccountName
+map passwd uidNumber employeeID
+map passwd homeDirectory "/home/$sAMAccountName"
+map passwd gecos mail
+map passwd loginShell "/bin/bash"
+map passwd gidNumber primaryGroupID
+map group uniqueMember member
+map group gidNumber primaryGroupID
+<% end -%>
